@@ -49,6 +49,7 @@
     />
     <ft-search-filters
       v-if="showSearchFilters"
+      :search-query-text="searchQueryText"
     />
     <ft-keyboard-shortcut-prompt
       v-if="isKeyboardShortcutPromptShown"
@@ -66,6 +67,7 @@
     <top-nav
       ref="topNav"
       :inert="isPromptOpen"
+      @search-query-text="updateSearchQueryText"
     />
     <side-nav
       ref="sideNav"
