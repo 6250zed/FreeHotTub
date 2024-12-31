@@ -314,7 +314,7 @@ import FtTimestampCatcher from '../FtTimestampCatcher.vue'
 import store from '../../store/index'
 
 import { copyToClipboard, showToast } from '../../helpers/utils'
-import { getCommunityPostComments, getLocalComments, parseLocalComment } from '../../helpers/api/local'
+import { getLocalCommunityPostComments, getLocalComments, parseLocalComment } from '../../helpers/api/local'
 import {
   getInvidiousCommunityPostCommentReplies,
   getInvidiousCommunityPostComments,
@@ -540,7 +540,7 @@ async function getCommentDataLocal(more = false) {
       comments = await nextPageToken.value.getContinuation()
     } else {
       if (props.isPostComments) {
-        comments = await getCommunityPostComments(props.id, props.postAuthorId, sortNewest.value)
+        comments = await getLocalCommunityPostComments(props.id, props.postAuthorId, sortNewest.value)
       } else {
         comments = await getLocalComments(props.id, sortNewest.value)
       }
