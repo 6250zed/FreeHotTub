@@ -314,7 +314,7 @@ import FtTimestampCatcher from '../FtTimestampCatcher.vue'
 import store from '../../store/index'
 
 import { copyToClipboard, showToast } from '../../helpers/utils'
-import { getLocalComments, parseLocalComment } from '../../helpers/api/local'
+import { getCommunityPostComments, getLocalComments, parseLocalComment } from '../../helpers/api/local'
 import {
   getInvidiousCommunityPostCommentReplies,
   getInvidiousCommunityPostComments,
@@ -473,7 +473,7 @@ function isSubscribedToChannel(channelId) {
 function getCommentData() {
   isLoading.value = true
 
-  if (!process.env.SUPPORTS_LOCAL_API || backendPreference.value === 'invidious' || props.isPostComments) {
+  if (!process.env.SUPPORTS_LOCAL_API || backendPreference.value === 'invidious') {
     if (!props.isPostComments) {
       getCommentDataInvidious()
     } else {
@@ -488,7 +488,7 @@ function getMoreComments() {
   if (commentData.value.length === 0 || nextPageToken.value == null) {
     showToast(t('Comments.There are no more comments for this video'))
   } else {
-    if (!process.env.SUPPORTS_LOCAL_API || backendPreference.value === 'invidious' || props.isPostComments) {
+    if (!process.env.SUPPORTS_LOCAL_API || backendPreference.value === 'invidious') {
       if (!props.isPostComments) {
         getCommentDataInvidious()
       } else {
@@ -515,7 +515,7 @@ function toggleCommentReplies(index) {
  * @param {number} index
  */
 function getCommentReplies(index) {
-  if (!process.env.SUPPORTS_LOCAL_API || commentData.value[index].dataType === 'invidious' || props.isPostComments) {
+  if (!process.env.SUPPORTS_LOCAL_API || commentData.value[index].dataType === 'invidious') {
     if (!props.isPostComments) {
       getCommentRepliesInvidious(index)
     } else {
@@ -539,7 +539,11 @@ async function getCommentDataLocal(more = false) {
     if (more) {
       comments = await nextPageToken.value.getContinuation()
     } else {
-      comments = await getLocalComments(props.id, sortNewest.value)
+      if (props.isPostComments) {
+        comments = await getCommunityPostComments(props.id, props.postAuthorId, sortNewest.value)
+      } else {
+        comments = await getLocalComments(props.id, sortNewest.value)
+      }
     }
 
     const parsedComments = comments.contents
@@ -586,7 +590,11 @@ async function getCommentDataLocal(more = false) {
     })
     if (backendFallback.value && backendPreference.value === 'local') {
       showToast(t('Falling back to Invidious API'))
-      getCommentDataInvidious()
+      if (props.isPostComments) {
+        getPostCommentsInvidious()
+      } else {
+        getCommentDataInvidious()
+      }
     } else {
       isLoading.value = false
     }
@@ -753,7 +761,13 @@ function getPostCommentsInvidious() {
     showToast(`${errorMessage}: ${err}`, 10000, () => {
       copyToClipboard(err)
     })
-    isLoading.value = false
+
+    if (process.env.SUPPORTS_LOCAL_API && backendFallback.value && backendPreference.value === 'invidious') {
+      showToast(t('Falling back to Local API'))
+      getCommentDataLocal()
+    } else {
+      isLoading.value = false
+    }
   })
 }
 
